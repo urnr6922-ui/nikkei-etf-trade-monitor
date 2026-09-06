@@ -11,7 +11,12 @@ if (!s.includes('function aggregateBars')) s = s.replace(needle, needle + insert
 
 const indicatorNeedle = "  const [indicators,setIndicators]=useState({sma:true,ema:true,rsi:true,macd:true,bb:true})"
 if (!s.includes('const [market,setMarket]')) {
-  s = s.replace(indicatorNeedle, indicatorNeedle + "\n  const [market,setMarket]=useState(null)\n  useEffect(()=>{let alive=true;loadMarket(activeSymbol).then(x=>{if(alive)setMarket(x)});return()=>{alive=false}},[activeSymbol,tf])")
+  s = s.replace(indicatorNeedle, indicatorNeedle + "\n  const [market,setMarket]=useState(null)")
+}
+
+const activeNeedle = "  const activeSymbol=assets[symbol]?symbol:'NIKKEI225'"
+if (!s.includes("loadMarket(activeSymbol).then")) {
+  s = s.replace(activeNeedle, activeNeedle + "\n  useEffect(()=>{let alive=true;loadMarket(activeSymbol).then(x=>{if(alive)setMarket(x)});return()=>{alive=false}},[activeSymbol,tf])")
 }
 
 s = s.replace("  const data=useMemo(()=>seededCandles(activeSymbol,tf),[activeSymbol,tf])", "  const liveRows=useMemo(()=>{if(!market?.data?.length)return null;if(tf==='1分足')return market.data;if(tf==='5分足')return aggregateBars(market.data,5);if(tf==='15分足')return aggregateBars(market.data,15);return dailyBars(market.data)},[market,tf])\n  const data=liveRows?.length>=20?liveRows.slice(-120):seededCandles(activeSymbol,tf)\n  const isLive=Boolean(liveRows?.length>=20)")
