@@ -1,4 +1,4 @@
-name: Update market data
+name: Update market data and deploy
 
 on:
   schedule:
@@ -7,13 +7,15 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
-  group: market-data
+  group: market-data-pages
   cancel-in-progress: true
 
 jobs:
-  update:
+  update-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,3 +29,23 @@ jobs:
           git add public/market-data/*.json
           git diff --cached --quiet || git commit -m 'Update market data'
           git push
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install
+      - name: Apply market-data connection
+        run: node scripts/patch-app.mjs
+      - name: Build
+        run: npm run build
+      - name: SPA fallback
+        run: cp dist/index.html dist/404.html
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
