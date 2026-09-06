@@ -44,7 +44,7 @@ const activeEffect = "  useEffect(()=>{let alive=true;const refresh=()=>loadMark
 if (!s.includes('const refresh=()=>loadMarket(activeSymbol)')) {
   s = s.replace(activeNeedle, activeNeedle + "\n" + activeEffect)
 }
-if (!s.includes('const refreshAll()=>')) {
+if (!s.includes('const refreshAll=()=>')) {
   const old = activeNeedle + "\n" + activeEffect
   const add = "\n  useEffect(()=>{let alive=true;const codes=['1570','1360','NIKKEI225'];const refreshAll=()=>Promise.all(codes.map(async c=>[c,await loadMarket(c)])).then(entries=>{if(!alive)return;const next={};for(const [c,rows] of entries)if(rows?.length)next[c]=rows;setMarketMap(next)});refreshAll();const timer=setInterval(refreshAll,600000);return()=>{alive=false;clearInterval(timer)}},[])"
   s = s.replace(old, old + add)
