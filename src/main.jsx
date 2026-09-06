@@ -5,25 +5,25 @@ import { Activity, Bell, BellOff, BarChart3, Info, RefreshCw, Settings, Trending
 import './styles.css'
 
 // Target ETFs: 1570 = NEXT FUNDS 日経平均レバレッジ・インデックス連動型上場投信
-//             1357 = NEXT FUNDS 日経平均ダブルインバース・インデックス連動型上場投信
+//             1360 = 日経平均ベア2倍上場投信（シンプレクス・アセット・マネジメント）
 const ETF = {
   '1570': { name: '日経レバ', subtitle: 'NEXT FUNDS 日経平均レバレッジ・インデックス連動型', price: 28640, change: 420 },
-  '1357': { name: '日経平均ベア2倍', subtitle: 'NEXT FUNDS 日経平均ダブルインバース・インデックス連動型', price: 835, change: -18 },
+  '1360': { name: '日経平均ベア2倍', subtitle: '日経平均ベア2倍上場投信', price: 69.4, change: -1.9 },
 }
 const TF = ['1分足', '5分足', '15分足', '日足']
 
 function seededCandles(symbol, tf, count = 72) {
-  const base = symbol === '1570' ? 28200 : 850
+  const base = symbol === '1570' ? 28200 : 70
   const scale = tf === '1分足' ? 1 : tf === '5分足' ? 1.7 : tf === '15分足' ? 2.6 : 4.2
   let p = base
   return Array.from({ length: count }, (_, i) => {
-    const wave = Math.sin(i / 7) * 150 * scale + Math.sin(i / 3.4) * 55 * scale
-    const drift = symbol === '1570' ? i * 5.1 * scale : -i * 0.7 * scale
-    const noise = Math.sin(i * 17.31) * 32 * scale
-    const close = Math.max(1, p + wave + drift + noise)
+    const wave = Math.sin(i / 7) * (symbol === '1570' ? 150 : 1.8) * scale + Math.sin(i / 3.4) * (symbol === '1570' ? 55 : 0.7) * scale
+    const drift = symbol === '1570' ? i * 5.1 * scale : -i * 0.03 * scale
+    const noise = Math.sin(i * 17.31) * (symbol === '1570' ? 32 : 0.35) * scale
+    const close = Math.max(0.1, p + wave + drift + noise)
     const open = p
-    const high = Math.max(open, close) + 28 * scale + Math.abs(Math.sin(i * 2.1)) * 55 * scale
-    const low = Math.min(open, close) - 28 * scale - Math.abs(Math.cos(i * 1.7)) * 45 * scale
+    const high = Math.max(open, close) + (symbol === '1570' ? 28 : 0.35) * scale + Math.abs(Math.sin(i * 2.1)) * (symbol === '1570' ? 55 : 0.6) * scale
+    const low = Math.min(open, close) - (symbol === '1570' ? 28 : 0.35) * scale - Math.abs(Math.cos(i * 1.7)) * (symbol === '1570' ? 45 : 0.5) * scale
     const volume = 18000 + Math.abs(Math.sin(i * 0.8)) * 32000 + i * 120
     p = close
     return { open, high, low, close, volume }
