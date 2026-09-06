@@ -40,11 +40,14 @@ if (!s.includes('const [market,setMarket]')) {
 }
 
 const activeNeedle = "  const activeSymbol=assets[symbol]?symbol:'NIKKEI225'"
-if (!s.includes("loadMarket(activeSymbol).then")) {
-  s = s.replace(activeNeedle, activeNeedle + "\n  useEffect(()=>{let alive=true;loadMarket(activeSymbol).then(x=>{if(alive)setMarket(x)});return()=>{alive=false}},[activeSymbol,tf])")
+const activeEffect = "  useEffect(()=>{let alive=true;const refresh=()=>loadMarket(activeSymbol).then(x=>{if(alive)setMarket(x)});refresh();const timer=setInterval(refresh,600000);return()=>{alive=false;clearInterval(timer)}},[activeSymbol,tf])"
+if (!s.includes('const refresh=()=>loadMarket(activeSymbol)')) {
+  s = s.replace(activeNeedle, activeNeedle + "\n" + activeEffect)
 }
-if (!s.includes('Promise.all(codes.map')) {
-  s = s.replace(activeNeedle + "\n  useEffect(()=>{let alive=true;loadMarket(activeSymbol).then(x=>{if(alive)setMarket(x)});return()=>{alive=false}},[activeSymbol,tf])", activeNeedle + "\n  useEffect(()=>{let alive=true;loadMarket(activeSymbol).then(x=>{if(alive)setMarket(x)});return()=>{alive=false}},[activeSymbol,tf])\n  useEffect(()=>{let alive=true;const codes=Object.keys(assets).filter(c=>['1570','1360','NIKKEI225'].includes(c));Promise.all(codes.map(async c=>[c,await loadMarket(c)])).then(entries=>{if(!alive)return;const next={};for(const [c,rows] of entries)if(rows?.length)next[c]=rows;setMarketMap(next)});return()=>{alive=false}},[assets])")
+if (!s.includes('const refreshAll=()=>')) {
+  const old = activeNeedle + "\n" + activeEffect
+  const add = "\n  useEffect(()=>{let alive=true;const codes=Object.keys(assets).filter(c=>['1570','1360','NIKKEI225'].includes(c));const refreshAll=()=>Promise.all(codes.map(async c=>[c,await loadMarket(c)])).then(entries=>{if(!alive)return;const next={};for(const [c,rows] of entries)if(rows?.length)next[c]=rows;setMarketMap(next)});refreshAll();const timer=setInterval(refreshAll,600000);return()=>{alive=false;clearInterval(timer)}},[assets])"
+  s = s.replace(old, old + add)
 }
 
 s = s.replace("  const data=useMemo(()=>seededCandles(activeSymbol,tf),[activeSymbol,tf])", "  const liveRows=useMemo(()=>{if(!market?.length)return null;if(tf==='1分足')return market;if(tf==='5分足')return aggregateBars(market,5);if(tf==='15分足')return aggregateBars(market,15);return dailyBars(market)},[market,tf])\n  const minBars=tf==='日足'?2:20\n  const data=liveRows?.length>=minBars?liveRows.slice(-120):seededCandles(activeSymbol,tf)\n  const isLive=Boolean(liveRows?.length>=minBars)\n  const quoteFor=code=>{const rows=marketMap[code],last=rows?.[rows.length-1],prev=rows?.[rows.length-2];if(!last||!Number.isFinite(last.close))return assets[code];const change=prev&&Number.isFinite(prev.close)?last.close-prev.close:0;return {...assets[code],price:last.close,change}}")
@@ -59,7 +62,7 @@ s = s.replace("{current.subtitle}", "{displayCurrent.subtitle}")
 s = s.replace("{Math.round(last.close).toLocaleString()}", "{Math.round(displayCurrent.price).toLocaleString()}")
 s = s.replace(' · {tf} · デモデータ', " · {tf} · {isLive?'実データ':'データ取得待ち'}")
 s = s.replace("hint={activeSymbol==='NIKKEI225'?'参考値':'デモ値'}", "hint={isLive?'実データ':'取得待ち'}")
-s = s.replace('市場データは現在デモデータです。', "{isLive?'市場データを取得しています。':'市場データを取得できない場合はデモ表示に切り替わります。'}")
+s = s.replace('市場データは現在デモデータです。', "{isLive?'取得した市場データを表示しています。':'市場データを取得できない場合はデモ表示に切り替わります。'}")
 s = s.replace('<strong>デモデータ</strong>です。実運用では利用許諾を満たした市場データ提供元との接続が必要です。', "<strong>{isLive?'取得した市場データ':'データ取得待ち（フォールバックはデモ）'}</strong>です。データ提供元の利用条件に従って使用してください。")
 
 await writeFile(path, s)
