@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 
-const symbols = { '1570': '1570.T', '1357': '1357.T', NIKKEI225: '^N225' }
+const symbols = { '1570': '1570.T', '1360': '1360.T', NIKKEI225: '^N225' }
 
 async function fetchChart(symbol) {
   const params = new URLSearchParams({ range: '7d', interval: '1m', events: 'history' })
