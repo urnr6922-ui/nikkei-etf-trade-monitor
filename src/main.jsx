@@ -4,9 +4,11 @@ import { BrowserRouter, useNavigate } from 'react-router-dom'
 import { Activity, Bell, BellOff, BarChart3, Info, RefreshCw, Settings, TrendingDown, TrendingUp, X } from 'lucide-react'
 import './styles.css'
 
+// Target ETFs: 1570 = NEXT FUNDS 日経平均レバレッジ・インデックス連動型上場投信
+//             1357 = NEXT FUNDS 日経平均ダブルインバース・インデックス連動型上場投信
 const ETF = {
   '1570': { name: '日経レバ', subtitle: 'NEXT FUNDS 日経平均レバレッジ・インデックス連動型', price: 28640, change: 420 },
-  '1357': { name: '日経ベア2倍', subtitle: 'NEXT FUNDS 日経平均ダブルインバース・インデックス連動型', price: 835, change: -18 },
+  '1357': { name: '日経平均ベア2倍', subtitle: 'NEXT FUNDS 日経平均ダブルインバース・インデックス連動型', price: 835, change: -18 },
 }
 const TF = ['1分足', '5分足', '15分足', '日足']
 
