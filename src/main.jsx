@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { createRoot } from 'react-dom/client'
 import { Activity, BarChart3, Bell, BellOff, Info, Plus, RefreshCw, Settings, TrendingUp, X } from 'lucide-react'
 import './styles.css'
 
