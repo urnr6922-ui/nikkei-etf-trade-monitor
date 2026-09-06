@@ -29,7 +29,7 @@ function dailyBars(rows) {
   return out
 }
 async function loadMarket(symbol) {
-  try { const res=await fetch(\`./market-data/\${symbol}.json?ts=\${Date.now()}\`,{cache:'no-store'}); if(!res.ok) throw new Error(); const p=await res.json(); return Array.isArray(p?.data)?p:null } catch { return null }
+  try { const res=await fetch(\`./market-data/\${symbol}.json?ts=\${Date.now()}\`,{cache:'no-store'}); if(!res.ok) throw new Error(); const p=await res.json(); return Array.isArray(p?.data)?Object.assign(p.data,{fetchedAt:p.fetchedAt||null}):null } catch { return null }
 }
 `
 if (!s.includes('function aggregateBars')) s = s.replace(needle, needle + insert)
@@ -60,7 +60,7 @@ s = s.replace("a.change>=0?'up':'down'", "q.change>=0?'up':'down'")
 s = s.replace("a.change>=0?'▲':'▼'} {Math.abs(a.change)}円", "q.change>=0?'▲':'▼'} {Math.abs(q.change).toLocaleString(undefined,{maximumFractionDigits:2})}円")
 s = s.replace("{current.subtitle}", "{displayCurrent.subtitle}")
 s = s.replace("{Math.round(last.close).toLocaleString()}", "{Math.round(displayCurrent.price).toLocaleString()}")
-s = s.replace(' · {tf} · デモデータ', " · {tf} · {isLive?'実データ':'データ取得待ち'}")
+s = s.replace(' · {tf} · デモデータ', " · {tf} · {isLive?'実データ':'データ取得待ち'}{isLive&&market?.fetchedAt?` · 取得 ${new Date(market.fetchedAt).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}`:''}")
 s = s.replace("hint={activeSymbol==='NIKKEI225'?'参考値':'デモ値'}", "hint={isLive?'実データ':'取得待ち'}")
 s = s.replace('市場データは現在デモデータです。', "{isLive?'取得した市場データを表示しています。':'市場データを取得できない場合はデモ表示に切り替わります。'}")
 s = s.replace('<strong>デモデータ</strong>です。実運用では利用許諾を満たした市場データ提供元との接続が必要です。', "<strong>{isLive?'取得した市場データ':'データ取得待ち（フォールバックはデモ）'}</strong>です。データ提供元の利用条件に従って使用してください。")
