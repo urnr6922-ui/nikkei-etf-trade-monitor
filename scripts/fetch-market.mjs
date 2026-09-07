@@ -52,7 +52,11 @@ async function fetchChart(symbol, range, interval) {
         low: Number(q.low?.[i]),
         close: Number(q.close?.[i]),
         volume: Number(q.volume?.[i] ?? 0)
-      })).filter(x => [x.open, x.high, x.low, x.close].every(Number.isFinite) && x.high >= x.low)
+      }))
+        // Yahoo may return placeholder zero-bars for holidays/missing observations.
+        // Exclude them so daily indicators and chart scaling are based only on real prices.
+        .filter(x => [x.open, x.high, x.low, x.close].every(Number.isFinite) && x.open > 0 && x.high > 0 && x.low > 0 && x.close > 0 && x.high >= x.low)
+        .sort((a, b) => a.time - b.time)
       return { symbol, fetchedAt: new Date().toISOString(), data }
     } catch (e) { lastError = e }
   }
