@@ -3,6 +3,8 @@ name: Update market data and deploy
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'public/market-data/**'
   schedule:
     - cron: '*/10 * * * *'
   workflow_dispatch:
@@ -32,6 +34,17 @@ jobs:
           node-version: 20
       - name: Fetch free market data
         run: node scripts/fetch-market.mjs
+      - name: Publish refreshed market data to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/market-data
+          if git diff --cached --quiet; then
+            echo "No market-data changes to commit"
+          else
+            git commit -m "data: refresh market data"
+            git push origin main
+          fi
       - name: Install dependencies
         run: npm install
       - name: Apply market-data connection
