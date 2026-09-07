@@ -12,9 +12,17 @@ const firebaseConfig = {
   measurementId: 'G-3X3880XFL3',
 }
 
-const app = initializeApp(firebaseConfig)
-const auth = getAuth(app)
-const db = getFirestore(app)
-const googleProvider = new GoogleAuthProvider()
+let auth = null
+let db = null
+let googleProvider = null
+
+try {
+  const app = initializeApp(firebaseConfig)
+  auth = getAuth(app)
+  db = getFirestore(app)
+  googleProvider = new GoogleAuthProvider()
+} catch (error) {
+  console.warn('Firebase initialization skipped:', error)
+}
 
 export { auth, db, googleProvider }
