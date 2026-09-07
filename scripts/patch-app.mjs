@@ -22,7 +22,8 @@ function aggregateBars(rows, minutes) {
 function dailyBars(rows) {
   const out=[]; let cur=null
   for (const r of rows) {
-    const d=new Date(r.time*1000).toISOString().slice(0,10)
+    const jst=new Date(r.time*1000+9*60*60*1000)
+    const d=jst.toISOString().slice(0,10)
     if(!cur||cur.date!==d){cur={date:d,time:r.time,open:r.open,high:r.high,low:r.low,close:r.close,volume:r.volume||0};out.push(cur)}
     else{cur.high=Math.max(cur.high,r.high);cur.low=Math.min(cur.low,r.low);cur.close=r.close;cur.volume+=(r.volume||0)}
   }
@@ -50,7 +51,7 @@ if (!s.includes('const refreshAll=()=>')) {
   s = s.replace(old, old + add)
 }
 
-s = s.replace("  const data=useMemo(()=>seededCandles(activeSymbol,tf),[activeSymbol,tf])", "  const liveRows=useMemo(()=>{if(!market?.length)return null;if(tf==='1分足')return market;if(tf==='5分足')return aggregateBars(market,5);if(tf==='15分足')return aggregateBars(market,15);return dailyBars(market)},[market,tf])\n  const minBars=tf==='日足'?2:20\n  const data=liveRows?.length>=minBars?liveRows.slice(-120):seededCandles(activeSymbol,tf)\n  const isLive=Boolean(liveRows?.length>=minBars)\n  const quoteFor=code=>{const rows=marketMap[code],last=rows?.[rows.length-1],prev=rows?.[rows.length-2];if(!last||!Number.isFinite(last.close))return assets[code];const change=prev&&Number.isFinite(prev.close)?last.close-prev.close:0;return {...assets[code],price:last.close,change}}")
+s = s.replace("  const data=useMemo(()=>seededCandles(activeSymbol,tf),[activeSymbol,tf])", "  const liveRows=useMemo(()=>{if(!market?.length)return null;if(tf==='1分足')return market;if(tf==='5分足')return aggregateBars(market,5);if(tf==='15分足')return aggregateBars(market,15);return dailyBars(market)},[market,tf])\n  const minBars=tf==='日足'?1:20\n  const data=liveRows?.length>=minBars?liveRows.slice(-120):seededCandles(activeSymbol,tf)\n  const isLive=Boolean(liveRows?.length>=minBars)\n  const quoteFor=code=>{const rows=marketMap[code],last=rows?.[rows.length-1],prev=rows?.[rows.length-2];if(!last||!Number.isFinite(last.close))return assets[code];const change=prev&&Number.isFinite(prev.close)?last.close-prev.close:0;return {...assets[code],price:last.close,change}}")
 s = s.replace("  const closes=data.map(x=>x.close),sma20=sma(closes,20),ema20=ema(closes,20),rs=rsi(closes),bb=bollinger(closes),mc=macd(closes)", "  const closes=data.map(x=>x.close),sma20=sma(closes,20),ema20=ema(closes,20),rs=rsi(closes),bb=bollinger(closes),mc=macd(closes)\n  const liveLast=isLive?data[data.length-1]:null, livePrev=isLive?data[data.length-2]:null\n  const displayCurrent={...current,price:liveLast?.close??current.price,change:liveLast&&livePrev&&Number.isFinite(liveLast.close)&&Number.isFinite(livePrev.close)?liveLast.close-livePrev.close:current.change}")
 s = s.replace("  const last=data[data.length-1],prev=data[data.length-2],pct=(last.close/prev.close-1)*100", "  const last=data[data.length-1],prev=data[data.length-2],pct=prev&&Number.isFinite(prev.close)&&prev.close!==0&&Number.isFinite(last.close)?(last.close/prev.close-1)*100:0")
 s = s.replace("{Object.entries(assets).map(([code,a])=>", "{Object.entries(assets).map(([code,a])=>{const q=quoteFor(code);return ")
