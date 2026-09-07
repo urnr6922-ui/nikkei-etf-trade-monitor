@@ -1,6 +1,31 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 
-const symbols = { '1570': '1570.T', '1360': '1360.T', NIKKEI225: '^N225' }
+const symbols = {
+  '1570': '1570.T',
+  '1360': '1360.T',
+  NIKKEI225: '^N225',
+  '1306': '1306.T',
+  '1321': '1321.T',
+  '1671': '1671.T',
+  '1542': '1542.T',
+  '2558': '2558.T',
+  '2631': '2631.T',
+  '2840': '2840.T',
+  '7203': '7203.T',
+  '6758': '6758.T',
+  '9984': '9984.T',
+  '8306': '8306.T',
+  '9432': '9432.T',
+  '6501': '6501.T',
+  '8035': '8035.T',
+  '6861': '6861.T',
+  '8058': '8058.T',
+  '5401': '5401.T',
+  '2914': '2914.T',
+  '4502': '4502.T',
+  '6098': '6098.T',
+  '7011': '7011.T'
+}
 const globalSymbols = { DOW: '^DJI', SP500: '^GSPC', NASDAQ: '^IXIC', SOX: '^SOX', USDJPY: 'JPY=X', US10Y: '^TNX', WTI: 'CL=F', NIKKEIF: 'NKD=F' }
 
 async function fetchChart(symbol, range, interval) {
@@ -25,7 +50,7 @@ async function fetchChart(symbol, range, interval) {
         low: Number(q.low?.[i]),
         close: Number(q.close?.[i]),
         volume: Number(q.volume?.[i] ?? 0)
-      })).filter(x => [x.open, x.high, x.low, x.close].every(Number.isFinite))
+      })).filter(x => [x.open, x.high, x.low, x.close].every(Number.isFinite) && x.high >= x.low)
       return { symbol, fetchedAt: new Date().toISOString(), data }
     } catch (e) { lastError = e }
   }
@@ -41,8 +66,7 @@ for (const [code, symbol] of Object.entries(symbols)) {
     await writeFile(`public/market-data/${code}-daily.json`, JSON.stringify(daily))
     console.log(`${code}: intraday=${intraday.data.length}, daily=${daily.data.length}`)
   } catch (e) {
-    console.error(`${code}: ${e.message}`)
-    process.exitCode = 1
+    console.warn(`${code}: unavailable (${e.message})`)
   }
 }
 
