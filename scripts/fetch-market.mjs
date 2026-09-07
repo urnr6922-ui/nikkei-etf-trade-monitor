@@ -24,7 +24,9 @@ const symbols = {
   '2914': '2914.T',
   '4502': '4502.T',
   '6098': '6098.T',
-  '7011': '7011.T'
+  '7011': '7011.T',
+  '4755': '4755.T',
+  '8848': '8848.T'
 }
 const globalSymbols = { DOW: '^DJI', SP500: '^GSPC', NASDAQ: '^IXIC', SOX: '^SOX', USDJPY: 'JPY=X', US10Y: '^TNX', WTI: 'CL=F', NIKKEIF: 'NKD=F' }
 
