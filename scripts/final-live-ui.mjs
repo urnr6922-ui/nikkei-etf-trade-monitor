@@ -39,8 +39,17 @@ s = s.replace(
 
 // Add a visible React error boundary instead of a blank/black screen on a render exception.
 const renderNeedle = "createRoot(document.getElementById('root')).render(<App/>)"
-const safeRender = `class SafeApp extends React.Component {\n  constructor(props){super(props);this.state={error:null}}\n  static getDerivedStateFromError(error){return {error}}\n  componentDidCatch(error){console.error('Nikkei ETF Trade Monitor render error',error)}\n  render(){if(this.state.error)return <div style={{minHeight:'100vh',background:'#080b12',color:'#f5f7fb',padding:'24px',fontFamily:'system-ui,sans-serif'}}><h2>画面の読み込みでエラーが発生しました</h2><p>市場データを再取得しても改善しない場合はページを再読み込みしてください。</p><button onClick={()=>window.location.reload()} style={{padding:'12px 18px',borderRadius:'10px'}}>再読み込み</button></div>;return <App/>}\n}\ncreateRoot(document.getElementById('root')).render(<SafeApp/>)`
+const safeRender = `class SafeApp extends React.Component {
+  constructor(props){super(props);this.state={error:null}}
+  static getDerivedStateFromError(error){return {error}}
+  componentDidCatch(error){console.error('Nikkei ETF Trade Monitor render error',error)}
+  render(){if(this.state.error)return <div style={{minHeight:'100vh',background:'#080b12',color:'#f5f7fb',padding:'24px',fontFamily:'system-ui,sans-serif'}}><h2>画面の読み込みでエラーが発生しました</h2><p>市場データを再取得しても改善しない場合はページを再読み込みしてください。</p><button onClick={()=>window.location.reload()} style={{padding:'12px 18px',borderRadius:'10px'}}>再読み込み</button></div>;return <App/>}
+}
+createRoot(document.getElementById('root')).render(<SafeApp/>)`
 if (s.includes(renderNeedle)) s = s.replace(renderNeedle, safeRender)
+
+// Ensure the error boundary itself has a React runtime available under the automatic JSX transform.
+s = s.replace("import { ", "import React, { ")
 
 await writeFile(path, s)
 console.log('Final live UI and runtime safety patch applied')
