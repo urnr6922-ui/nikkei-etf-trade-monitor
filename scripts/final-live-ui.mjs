@@ -64,6 +64,21 @@ s = s.replace(
   "const displayCurrent=quoteFor(activeSymbol)||assets[activeSymbol]||DEFAULT_ASSETS['1570']"
 )
 
+// Harden the final indicator inputs. This prevents toFixed()/Math.* calls from receiving
+// null/NaN when a live feed has an incomplete daily candle set.
+s = s.replace(
+  "const closes=data.map(x=>x.close),sma20=sma(closes,20),ema20=ema(closes,20),rs=rsi(closes),bb=bollinger(closes),mc=macd(closes)",
+  "const closes=data.map(x=>Number.isFinite(x.close)?x.close:0),sma20=sma(closes,20),ema20=ema(closes,20),rs=rsi(closes),bb=bollinger(closes),mc=macd(closes)"
+)
+s = s.replace(
+  "const s=sma20[sma20.length-1],e=ema20[ema20.length-1],r=rs[rs.length-1],ml=mc.line[mc.line.length-1],ms=mc.signal[mc.signal.length-1]",
+  "const s=Number.isFinite(sma20[sma20.length-1])?sma20[sma20.length-1]:closes[closes.length-1],e=Number.isFinite(ema20[ema20.length-1])?ema20[ema20.length-1]:closes[closes.length-1],r=Number.isFinite(rs[rs.length-1])?rs[rs.length-1]:50,ml=Number.isFinite(mc.line[mc.line.length-1])?mc.line[mc.line.length-1]:0,ms=Number.isFinite(mc.signal[mc.signal.length-1])?mc.signal[mc.signal.length-1]:0"
+)
+s = s.replace(
+  "const data=liveRows?.length>=minBars?liveRows.slice(-120):seededCandles(activeSymbol,tf)",
+  "const cleanLiveRows=liveRows?.filter(x=>Number.isFinite(x?.time)&&Number.isFinite(x?.open)&&Number.isFinite(x?.high)&&Number.isFinite(x?.low)&&Number.isFinite(x?.close)&&x.close>0&&x.high>=Math.max(x.open,x.close)&&x.low<=Math.min(x.open,x.close))||null\n  const data=cleanLiveRows?.length>=minBars?cleanLiveRows.slice(-120):seededCandles(activeSymbol,tf)"
+)
+
 // Add a visible React error boundary. On the first startup exception, clear only the app's
 // persisted state once and reload; this repairs stale browser state without touching other data.
 const renderNeedle = "createRoot(document.getElementById('root')).render(<App/>)"
