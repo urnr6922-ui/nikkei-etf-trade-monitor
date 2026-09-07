@@ -49,7 +49,10 @@ createRoot(document.getElementById('root')).render(<SafeApp/>)`
 if (s.includes(renderNeedle)) s = s.replace(renderNeedle, safeRender)
 
 // Ensure the error boundary itself has a React runtime available under the automatic JSX transform.
-s = s.replace("import { ", "import React, { ")
+const reactImport = s.match(/^import \{([^\n]+)\} from ['"]react['"]/m)
+if (reactImport && !/^import React,/.test(reactImport[0])) {
+  s = s.replace(reactImport[0], `import React, {${reactImport[1]}} from 'react'`)
+}
 
 await writeFile(path, s)
 console.log('Final live UI and runtime safety patch applied')
