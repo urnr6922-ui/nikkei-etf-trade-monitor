@@ -7,6 +7,29 @@ let s = await readFile(path, 'utf8')
 s = s.replace("useState('NIKKEI225')", "useState('1570')")
 s = s.replace("setSymbol('NIKKEI225')", "setSymbol('1570')")
 
+// Sanitize persisted browser state so an old/corrupt custom asset cannot crash the first render.
+s = s.replace(/function loadAssets\(\) \{[\s\S]*?\n\}\nfunction saveAssets/, `function loadAssets() {
+  const base = { ...DEFAULT_ASSETS }
+  try {
+    const saved = JSON.parse(window.localStorage.getItem('nikkei-monitor-assets') || 'null')
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return base
+    for (const [code, value] of Object.entries(saved)) {
+      if (!value || typeof value !== 'object') continue
+      const name = typeof value.name === 'string' && value.name.trim() ? value.name.trim() : null
+      if (!name) continue
+      base[code] = {
+        name,
+        subtitle: typeof value.subtitle === 'string' && value.subtitle.trim() ? value.subtitle : name,
+        price: Number.isFinite(Number(value.price)) ? Number(value.price) : 0,
+        change: Number.isFinite(Number(value.change)) ? Number(value.change) : 0,
+        type: value.type === 'custom' ? 'custom' : (base[code]?.type || 'etf')
+      }
+    }
+  } catch {}
+  return base
+}
+function saveAssets`)
+
 // Use the fetched quote in the ticker itself, not the static seed price.
 s = s.replace(
   "{a.price.toLocaleString()}円</strong><em className={a.change>=0?'up':'down'}>{a.change>=0?'▲':'▼'} {Math.abs(a.change)}円</em>",
@@ -36,14 +59,29 @@ s = s.replace(
   "const score=baseScore + (orientedGlobal>=2?1:orientedGlobal<=-2?-1:0)",
   "const score=Number.isFinite(baseScore)?baseScore + (orientedGlobal>=2?1:orientedGlobal<=-2?-1:0):0"
 )
+s = s.replace(
+  "const displayCurrent=quoteFor(activeSymbol)",
+  "const displayCurrent=quoteFor(activeSymbol)||assets[activeSymbol]||DEFAULT_ASSETS['1570']"
+)
 
-// Add a visible React error boundary instead of a blank/black screen on a render exception.
+// Add a visible React error boundary. On the first startup exception, clear only the app's
+// persisted state once and reload; this repairs stale browser state without touching other data.
 const renderNeedle = "createRoot(document.getElementById('root')).render(<App/>)"
 const safeRender = `class SafeApp extends React.Component {
   constructor(props){super(props);this.state={error:null}}
   static getDerivedStateFromError(error){return {error}}
-  componentDidCatch(error){console.error('Nikkei ETF Trade Monitor render error',error)}
-  render(){if(this.state.error)return <div style={{minHeight:'100vh',background:'#080b12',color:'#f5f7fb',padding:'24px',fontFamily:'system-ui,sans-serif'}}><h2>画面の読み込みでエラーが発生しました</h2><p>市場データを再取得しても改善しない場合はページを再読み込みしてください。</p><button onClick={()=>window.location.reload()} style={{padding:'12px 18px',borderRadius:'10px'}}>再読み込み</button></div>;return <App/>}
+  componentDidCatch(error){
+    console.error('Nikkei ETF Trade Monitor render error',error)
+    try {
+      const key='nikkei-monitor-startup-recovery'
+      if(!sessionStorage.getItem(key)){
+        sessionStorage.setItem(key,'1')
+        localStorage.removeItem('nikkei-monitor-assets')
+        window.location.reload()
+      }
+    } catch {}
+  }
+  render(){if(this.state.error)return <div style={{minHeight:'100vh',background:'#080b12',color:'#f5f7fb',padding:'24px',fontFamily:'system-ui,sans-serif'}}><h2>画面の読み込みでエラーが発生しました</h2><p>起動時データを初期化しても改善しませんでした。ページを再読み込みしてください。</p><button onClick={()=>window.location.reload()} style={{padding:'12px 18px',borderRadius:'10px'}}>再読み込み</button></div>;return <App/>}
 }
 createRoot(document.getElementById('root')).render(<SafeApp/>)`
 if (s.includes(renderNeedle)) s = s.replace(renderNeedle, safeRender)
@@ -55,4 +93,4 @@ if (reactImport && !/^import React,/.test(reactImport[0])) {
 }
 
 await writeFile(path, s)
-console.log('Final live UI and runtime safety patch applied')
+console.log('Final live UI and startup recovery patch applied')
