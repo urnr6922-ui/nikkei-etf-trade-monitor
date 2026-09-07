@@ -20,17 +20,22 @@ function loadAssets() {
 function saveAssets(assets) {
   try { window.localStorage.setItem('nikkei-monitor-assets', JSON.stringify(assets)) } catch {}
 }
-function seededCandles(symbol, tf, count = 72) {
+
+// チャート用デモデータ。日足は「1日=1本」として独立した系列を生成する。
+function seededCandles(symbol, tf) {
   const is1360 = symbol === '1360', isNikkei = symbol === 'NIKKEI225'
+  const isDaily = tf === '日足'
+  const count = isDaily ? 120 : 72
   const base = isNikkei ? 43500 : is1360 ? 70 : symbol === '1570' ? 28200 : 1000
   const scale = tf === '1分足' ? 1 : tf === '5分足' ? 1.7 : tf === '15分足' ? 2.6 : 4.2
   const unit = is1360 ? 1 : isNikkei || symbol === '1570' ? 150 : Math.max(base * 0.01, 5)
   let p = base
   return Array.from({ length: count }, (_, i) => {
-    const wave = Math.sin(i / 7) * unit * scale + Math.sin(i / 3.4) * unit * 0.37 * scale
+    const wave = Math.sin(i / (isDaily ? 8 : 7)) * unit * scale + Math.sin(i / 3.4) * unit * 0.37 * scale
     const drift = (is1360 ? -0.03 : 5.1) * scale * i
     const noise = Math.sin(i * 17.31) * unit * 0.21 * scale
-    const close = Math.max(0.1, p + wave + drift + noise), open = p
+    const close = Math.max(0.1, p + wave + drift + noise)
+    const open = p
     const high = Math.max(open, close) + unit * 0.19 * scale + Math.abs(Math.sin(i * 2.1)) * unit * 0.37 * scale
     const low = Math.min(open, close) - unit * 0.19 * scale - Math.abs(Math.cos(i * 1.7)) * unit * 0.3 * scale
     p = close
