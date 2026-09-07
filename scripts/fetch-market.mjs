@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 
 const symbols = { '1570': '1570.T', '1360': '1360.T', NIKKEI225: '^N225' }
+const globalSymbols = { DOW: '^DJI', SP500: '^GSPC', NASDAQ: '^IXIC', SOX: '^SOX', USDJPY: 'JPY=X', US10Y: '^TNX', WTI: 'CL=F', NIKKEIF: 'NKD=F' }
 
 async function fetchChart(symbol, range, interval) {
   const params = new URLSearchParams({ range, interval, events: 'history' })
@@ -36,13 +37,23 @@ for (const [code, symbol] of Object.entries(symbols)) {
   try {
     const intraday = await fetchChart(symbol, '7d', '1m')
     await writeFile(`public/market-data/${code}.json`, JSON.stringify(intraday))
-
     const daily = await fetchChart(symbol, '1y', '1d')
     await writeFile(`public/market-data/${code}-daily.json`, JSON.stringify(daily))
-
     console.log(`${code}: intraday=${intraday.data.length}, daily=${daily.data.length}`)
   } catch (e) {
     console.error(`${code}: ${e.message}`)
     process.exitCode = 1
   }
 }
+
+const globalData = {}
+for (const [code, symbol] of Object.entries(globalSymbols)) {
+  try {
+    const daily = await fetchChart(symbol, '10d', '1d')
+    globalData[code] = { symbol, fetchedAt: daily.fetchedAt, data: daily.data.slice(-10) }
+    console.log(`${code}: ${daily.data.length}`)
+  } catch (e) {
+    console.warn(`${code}: unavailable (${e.message})`)
+  }
+}
+await writeFile('public/market-data/global.json', JSON.stringify({ fetchedAt: new Date().toISOString(), data: globalData }))
