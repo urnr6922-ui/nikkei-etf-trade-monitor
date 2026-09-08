@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/fetch-market.mjs && node scripts/patch-app.mjs && node scripts/fix-shared-market-source.mjs && node scripts/fix-generated.mjs && node scripts/final-ui-cleanup.mjs && node scripts/fix-catalog-syntax.mjs && node scripts/fix-settings-persistence.mjs && node scripts/fix-update-layout.mjs && node scripts/fix-rakuten-leopalace.mjs && node scripts/fix-rakuten-persistence.mjs && node scripts/fix-chart-and-price.mjs && node scripts/center-nikkei.mjs && node scripts/fix-firebase-sync.mjs && node scripts/fix-runtime-stability.mjs && node scripts/final-live-ui.mjs && node scripts/final-junior-ui.mjs && node scripts/fix-chart-scale.mjs && node scripts/final-chart-settings-fix.mjs && node scripts/fix-duplicate-ind.mjs && node scripts/build-junior-json.mjs && vite build",
+    "build": "node scripts/fetch-market.mjs && node scripts/patch-app.mjs && node scripts/fix-shared-market-source.mjs && node scripts/fix-generated.mjs && node scripts/final-ui-cleanup.mjs && node scripts/fix-catalog-syntax.mjs && node scripts/fix-settings-persistence.mjs && node scripts/fix-update-layout.mjs && node scripts/fix-rakuten-leopalace.mjs && node scripts/fix-rakuten-persistence.mjs && node scripts/fix-chart-and-price.mjs && node scripts/center-nikkei.mjs && node scripts/fix-firebase-sync.mjs && node scripts/fix-runtime-stability.mjs && node scripts/final-live-ui.mjs && node scripts/final-junior-ui.mjs && node scripts/fix-chart-scale.mjs && node scripts/final-chart-settings-fix.mjs && node scripts/fix-duplicate-ind.mjs && node scripts/fix-1357-symbol.mjs && node scripts/build-junior-json.mjs && vite build",
     "preview": "vite preview",
     "start": "vite preview --host 0.0.0.0 --port $PORT"
   },
