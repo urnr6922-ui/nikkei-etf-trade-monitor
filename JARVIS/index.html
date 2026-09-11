@@ -24,13 +24,39 @@
 <div class="settings" id="settings">音声：日本語（ja-JP）<br>音声認識：ブラウザー対応時に使用<br>音声合成：端末の日本語音声を使用<br>※完全オフライン音声認識はブラウザーと端末の対応状況によります。</div>
 </main>
 <script>
-const $=id=>document.getElementById(id);const mic=$("mic"),status=$("status"),text=$("text"),prompt=$("prompt"),orb=$("orb");
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,lastAnswer="";
+const $=id=>document.getElementById(id);
+const mic=$("mic"),status=$("status"),text=$("text"),prompt=$("prompt"),orb=$("orb");
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null,lastAnswer="",listening=false;
 function speak(a){lastAnswer=a;if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(a);u.lang='ja-JP';u.rate=.95;speechSynthesis.speak(u)}
-function answer(q){const n=new Date();let a='「'+q+'」を受け取りました。';if(/こんにちは|おはよう|こんばんは/.test(q))a='こんにちは。JARVISです。';else if(/時間|何時/.test(q))a='現在時刻は '+n.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})+' です。';else if(/日付|何日|今日/.test(q))a='今日は '+n.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'})+' です。';else if(/日経平均/.test(q))a='日経平均の最新情報を取得する機能は、次のデータ連携段階で追加します。';else if(/ありがとう/.test(q))a='どういたしまして。';else a='了解しました。「'+q+'」ですね。現在は基本音声機能が動作しています。';text.textContent=a;status.textContent='回答しました';orb.textContent='◉';speak(a)}
-if(SR){rec=new SR();rec.lang='ja-JP';rec.continuous=false;rec.interimResults=false;rec.maxAlternatives=1;try{rec.processLocally=false}catch(e){}rec.onstart=()=>{mic.classList.add('listening');status.textContent='聞き取り中…';prompt.textContent='話してください';orb.textContent='●'};rec.onresult=e=>{const q=e.results[0][0].transcript;text.textContent='「'+q+'」';status.textContent='回答を準備中…';answer(q)};rec.onerror=e=>{mic.classList.remove('listening');orb.textContent='◉';status.textContent='音声認識エラー';text.textContent=e.error==='not-allowed'?'マイクの許可を確認してください。':'音声を認識できませんでした。もう一度お試しください。'};rec.onend=()=>{mic.classList.remove('listening');if(status.textContent==='聞き取り中…')status.textContent='待機中…';orb.textContent='◉'}}
-mic.onclick=()=>{if(!rec){status.textContent='このブラウザーは音声認識に対応していません。';return}try{rec.start()}catch(e){status.textContent='もう一度マイクを押してください。'}};
-$("stop").onclick=()=>{if(rec)try{rec.stop()}catch(e){}if('speechSynthesis'in window)speechSynthesis.cancel();mic.classList.remove('listening');status.textContent='停止しました';orb.textContent='◉'};
+function answer(q){const n=new Date();let a='「'+q+'」を受け取りました。';if(/こんにちは|おはよう|こんばんは/.test(q))a='こんにちは。JARVISです。';else if(/時間|何時/.test(q))a='現在時刻は '+n.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})+' です。';else if(/日付|何日|今日/.test(q))a='今日は '+n.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'})+' です。';else if(/日経平均/.test(q))a='日経平均の最新情報を取得する機能は、次のデータ連携段階で追加します。';else if(/ありがとう/.test(q))a='どういたしまして。';else a='了解しました。「'+q+'」ですね。現在は基本音声機能が動作しています。';text.textContent=a;status.textContent='回答しました';prompt.textContent='「JARVIS」と話しかけてください';orb.textContent='◉';speak(a)}
+function setError(message){listening=false;mic.classList.remove('listening');orb.textContent='◉';status.textContent=message;prompt.textContent='もう一度マイクを押してください'}
+if(SR){
+  rec=new SR();
+  rec.lang='ja-JP';
+  rec.continuous=false;
+  rec.interimResults=false;
+  rec.maxAlternatives=1;
+  rec.onstart=()=>{listening=true;mic.classList.add('listening');status.textContent='聞き取り中…';prompt.textContent='「こんにちは」と話してください';orb.textContent='●'};
+  rec.onaudiostart=()=>{status.textContent='マイク入力を受信中…'};
+  rec.onspeechstart=()=>{status.textContent='音声を認識中…'};
+  rec.onresult=e=>{const q=e.results[0][0].transcript.trim();if(!q){setError('音声を認識できませんでした');return}text.textContent='「'+q+'」';status.textContent='回答を準備中…';answer(q)};
+  rec.onnomatch=()=>setError('音声を認識できませんでした');
+  rec.onerror=e=>{
+    if(e.error==='not-allowed'||e.error==='service-not-allowed')setError('マイクの使用が許可されていません。ブラウザーのマイク権限を確認してください');
+    else if(e.error==='audio-capture')setError('マイクを使用できません。端末のマイク権限を確認してください');
+    else if(e.error==='no-speech')setError('音声が検出されませんでした。もう一度「こんにちは」と話してください');
+    else if(e.error==='network')setError('音声認識サービスに接続できません。通信状態を確認してください');
+    else setError('音声認識エラー：'+e.error);
+  };
+  rec.onend=()=>{if(!listening)return;listening=false;mic.classList.remove('listening');orb.textContent='◉';if(status.textContent==='聞き取り中…'||status.textContent==='マイク入力を受信中…'||status.textContent==='音声を認識中…')status.textContent='待機中…'};
+}
+mic.onclick=()=>{
+  if(!rec){setError('このブラウザーは音声認識に対応していません');return}
+  if(listening)return;
+  try{status.textContent='マイクを準備中…';rec.start()}catch(e){setError('音声認識を開始できませんでした。少し待ってから再度お試しください')}
+};
+$("stop").onclick=()=>{if(rec)try{listening=false;rec.stop()}catch(e){}if('speechSynthesis'in window)speechSynthesis.cancel();mic.classList.remove('listening');status.textContent='停止しました';orb.textContent='◉'};
 $("speak").onclick=()=>{if(lastAnswer)speak(lastAnswer);else status.textContent='まだ回答がありません。'};
 $("gear").onclick=()=>$("settings").classList.toggle('open');
 </script>
