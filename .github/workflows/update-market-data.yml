@@ -53,6 +53,11 @@ jobs:
         run: node scripts/patch-app.mjs
       - name: Build
         run: npm run build
+      - name: Publish JARVIS
+        run: |
+          rm -rf dist/jarvis
+          mkdir -p dist/jarvis
+          cp -R JARVIS/. dist/jarvis/
       - name: SPA fallback
         run: cp dist/index.html dist/404.html
       - name: Setup Pages
