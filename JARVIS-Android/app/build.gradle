@@ -1,0 +1,5 @@
+plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
+
+android { namespace 'jp.jarvis.assistant'; compileSdk 34
+    defaultConfig { applicationId 'jp.jarvis.assistant'; minSdk 23; targetSdk 34; versionCode 1; versionName '0.1' }
+}
