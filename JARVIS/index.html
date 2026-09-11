@@ -31,32 +31,41 @@ let rec=null,lastAnswer="",listening=false;
 function speak(a){lastAnswer=a;if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(a);u.lang='ja-JP';u.rate=.95;speechSynthesis.speak(u)}
 function answer(q){const n=new Date();let a='「'+q+'」を受け取りました。';if(/こんにちは|おはよう|こんばんは/.test(q))a='こんにちは。JARVISです。';else if(/時間|何時/.test(q))a='現在時刻は '+n.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})+' です。';else if(/日付|何日|今日/.test(q))a='今日は '+n.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'})+' です。';else if(/日経平均/.test(q))a='日経平均の最新情報を取得する機能は、次のデータ連携段階で追加します。';else if(/ありがとう/.test(q))a='どういたしまして。';else a='了解しました。「'+q+'」ですね。現在は基本音声機能が動作しています。';text.textContent=a;status.textContent='回答しました';prompt.textContent='「JARVIS」と話しかけてください';orb.textContent='◉';speak(a)}
 function setError(message){listening=false;mic.classList.remove('listening');orb.textContent='◉';status.textContent=message;prompt.textContent='もう一度マイクを押してください'}
-if(SR){
-  rec=new SR();
-  rec.lang='ja-JP';
-  rec.continuous=false;
-  rec.interimResults=false;
-  rec.maxAlternatives=1;
-  rec.onstart=()=>{listening=true;mic.classList.add('listening');status.textContent='聞き取り中…';prompt.textContent='「こんにちは」と話してください';orb.textContent='●'};
-  rec.onaudiostart=()=>{status.textContent='マイク入力を受信中…'};
-  rec.onspeechstart=()=>{status.textContent='音声を認識中…'};
-  rec.onresult=e=>{const q=e.results[0][0].transcript.trim();if(!q){setError('音声を認識できませんでした');return}text.textContent='「'+q+'」';status.textContent='回答を準備中…';answer(q)};
-  rec.onnomatch=()=>setError('音声を認識できませんでした');
-  rec.onerror=e=>{
+function makeRecognition(){
+  if(!SR)return null;
+  const r=new SR();
+  r.lang='ja-JP';r.continuous=false;r.interimResults=false;r.maxAlternatives=1;
+  r.onstart=()=>{listening=true;mic.classList.add('listening');status.textContent='聞き取り中…';prompt.textContent='「こんにちは」と話してください';orb.textContent='●'};
+  r.onaudiostart=()=>{status.textContent='マイク入力を受信中…'};
+  r.onspeechstart=()=>{status.textContent='音声を認識中…'};
+  r.onresult=e=>{const q=e.results[0][0].transcript.trim();if(!q){setError('音声を認識できませんでした');return}text.textContent='「'+q+'」';status.textContent='回答を準備中…';answer(q)};
+  r.onnomatch=()=>setError('音声を認識できませんでした');
+  r.onerror=e=>{
     if(e.error==='not-allowed'||e.error==='service-not-allowed')setError('マイクの使用が許可されていません。ブラウザーのマイク権限を確認してください');
     else if(e.error==='audio-capture')setError('マイクを使用できません。端末のマイク権限を確認してください');
     else if(e.error==='no-speech')setError('音声が検出されませんでした。もう一度「こんにちは」と話してください');
     else if(e.error==='network')setError('音声認識サービスに接続できません。通信状態を確認してください');
-    else setError('音声認識エラー：'+e.error);
+    else setError('音声認識エラー：'+(e.error||'不明なエラー'));
   };
-  rec.onend=()=>{if(!listening)return;listening=false;mic.classList.remove('listening');orb.textContent='◉';if(status.textContent==='聞き取り中…'||status.textContent==='マイク入力を受信中…'||status.textContent==='音声を認識中…')status.textContent='待機中…'};
+  r.onend=()=>{listening=false;mic.classList.remove('listening');orb.textContent='◉';if(status.textContent==='聞き取り中…'||status.textContent==='マイク入力を受信中…'||status.textContent==='音声を認識中…')status.textContent='待機中…';rec=null};
+  return r;
 }
+if(!SR){setError('このブラウザーは音声認識に対応していません。Chromeなど対応ブラウザーで開いてください')}
 mic.onclick=()=>{
-  if(!rec){setError('このブラウザーは音声認識に対応していません');return}
+  if(!SR){setError('このブラウザーは音声認識に対応していません。Chromeなど対応ブラウザーで開いてください');return}
   if(listening)return;
-  try{status.textContent='マイクを準備中…';rec.start()}catch(e){setError('音声認識を開始できませんでした。少し待ってから再度お試しください')}
+  try{
+    if(rec){try{rec.abort()}catch(e){}rec=null}
+    rec=makeRecognition();
+    if(!rec){setError('音声認識を利用できません');return}
+    status.textContent='マイクを準備中…';
+    rec.start();
+  }catch(e){
+    rec=null;
+    setError('音声認識を開始できませんでした。もう一度マイクを押してください');
+  }
 };
-$("stop").onclick=()=>{if(rec)try{listening=false;rec.stop()}catch(e){}if('speechSynthesis'in window)speechSynthesis.cancel();mic.classList.remove('listening');status.textContent='停止しました';orb.textContent='◉'};
+$("stop").onclick=()=>{if(rec)try{listening=false;rec.abort()}catch(e){}rec=null;if('speechSynthesis'in window)speechSynthesis.cancel();mic.classList.remove('listening');status.textContent='停止しました';orb.textContent='◉'};
 $("speak").onclick=()=>{if(lastAnswer)speak(lastAnswer);else status.textContent='まだ回答がありません。'};
 $("gear").onclick=()=>$("settings").classList.toggle('open');
 </script>
