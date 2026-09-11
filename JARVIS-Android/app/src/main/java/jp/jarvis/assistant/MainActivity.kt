@@ -7,12 +7,14 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import java.util.ArrayDeque
 import java.util.Locale
 
 class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private lateinit var web: WebView
     private lateinit var tts: TextToSpeech
     private var ready = false
+    private val pendingSpeech = ArrayDeque<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,25 +23,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         web.settings.javaScriptEnabled = true
         web.settings.domStorageEnabled = true
         web.settings.mediaPlaybackRequiresUserGesture = false
-        web.webViewClient = object : WebViewClient() {
-            override fun onPageFinished(view: WebView, url: String) {
-                super.onPageFinished(view, url)
-                view.evaluateJavascript("""
-                    (function(){
-                      if(!window.AndroidTTS || !window.speechSynthesis) return;
-                      const s=window.speechSynthesis;
-                      s.speak=function(u){
-                        try{if(u&&u.onstart)u.onstart();}catch(e){}
-                        try{window.AndroidTTS.speak((u&&u.text)||'');}catch(e){}
-                        const ms=Math.max(900,(((u&&u.text)||'').length)*170);
-                        setTimeout(function(){try{if(u&&u.onend)u.onend();}catch(e){}},ms);
-                      };
-                      s.cancel=function(){try{window.AndroidTTS.stop();}catch(e){}};
-                      s.resume=function(){};
-                    })();
-                """.trimIndent(), null)
-            }
-        }
+        web.webViewClient = WebViewClient()
         web.webChromeClient = WebChromeClient()
         web.addJavascriptInterface(AndroidTtsBridge(), "AndroidTTS")
         setContentView(web)
@@ -48,25 +32,47 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     override fun onInit(status: Int) {
         ready = status == TextToSpeech.SUCCESS
-        if (ready) tts.language = Locale.JAPAN
+        if (!ready) return
+        val result = tts.setLanguage(Locale.JAPAN)
+        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+            tts.setLanguage(Locale.JAPANESE)
+        }
+        tts.setSpeechRate(0.95f)
+        tts.setPitch(1.0f)
+        while (pendingSpeech.isNotEmpty()) {
+            speakNow(pendingSpeech.removeFirst())
+        }
+    }
+
+    private fun speakNow(text: String) {
+        if (text.isBlank() || !ready) return
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "JARVIS")
     }
 
     private inner class AndroidTtsBridge {
         @JavascriptInterface
         fun speak(text: String) {
             runOnUiThread {
-                if (!ready) return@runOnUiThread
-                tts.language = Locale.JAPAN
-                tts.setSpeechRate(0.95f)
-                tts.setPitch(1.0f)
-                tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "JARVIS")
+                if (text.isBlank()) return@runOnUiThread
+                if (!ready) {
+                    pendingSpeech.addLast(text)
+                    return@runOnUiThread
+                }
+                speakNow(text)
             }
         }
+
         @JavascriptInterface
-        fun stop() { runOnUiThread { if (ready) tts.stop() } }
+        fun stop() {
+            runOnUiThread {
+                pendingSpeech.clear()
+                if (ready) tts.stop()
+            }
+        }
     }
 
     override fun onDestroy() {
+        pendingSpeech.clear()
         if (::tts.isInitialized) { tts.stop(); tts.shutdown() }
         if (::web.isInitialized) web.destroy()
         super.onDestroy()
