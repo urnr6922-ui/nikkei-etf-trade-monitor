@@ -27,8 +27,8 @@
 const $=id=>document.getElementById(id);
 const mic=$("mic"),status=$("status"),text=$("text"),prompt=$("prompt"),orb=$("orb");
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-const TTS='speechSynthesis' in window;
-let rec=null,lastAnswer="",listening=false,voices=[];
+const TTS='speechSynthesis' in window&&'SpeechSynthesisUtterance' in window;
+let rec=null,lastAnswer="",listening=false,voices=[],speechTimer=null;
 
 function loadVoices(){voices=TTS?speechSynthesis.getVoices():[];return voices}
 if(TTS){loadVoices();if('onvoiceschanged' in speechSynthesis)speechSynthesis.onvoiceschanged=loadVoices}
@@ -37,19 +37,24 @@ function speak(a){
   lastAnswer=a;
   if(!TTS){status.textContent='このブラウザーは音声読み上げに対応していません';return false}
   try{
+    if(speechTimer)clearTimeout(speechTimer);
     speechSynthesis.cancel();
     loadVoices();
     const u=new SpeechSynthesisUtterance(a);
     u.lang='ja-JP';u.rate=.95;u.pitch=1;u.volume=1;
     const ja=voices.find(v=>/^ja(-|_)/i.test(v.lang));
     if(ja)u.voice=ja;
-    u.onstart=()=>status.textContent='音声で回答中…';
-    u.onend=()=>status.textContent='回答しました';
-    u.onerror=()=>status.textContent='文字で回答しました（音声出力を開始できませんでした）';
+    let started=false;
+    u.onstart=()=>{started=true;status.textContent='音声で回答中…'};
+    u.onend=()=>{status.textContent='回答しました'};
+    u.onerror=e=>{status.textContent='音声出力を開始できませんでした（'+(e.error||'unknown')+'）'};
     speechSynthesis.resume();
-    speechSynthesis.speak(u);
+    speechTimer=setTimeout(()=>{
+      try{speechSynthesis.speak(u)}catch(e){status.textContent='音声出力を開始できませんでした'}
+      setTimeout(()=>{if(!started&&status.textContent==='音声で回答中…')status.textContent='音声出力が開始されませんでした。端末の読み上げ機能を確認してください'},1600);
+    },80);
     return true;
-  }catch(e){status.textContent='文字で回答しました（音声出力を開始できませんでした）';return false}
+  }catch(e){status.textContent='音声出力を開始できませんでした';return false}
 }
 
 function answer(q){
@@ -88,7 +93,7 @@ mic.onclick=()=>{
  try{status.textContent='マイクを準備中…';rec.start()}catch(e){setError('音声認識を開始できませんでした。少し待ってから再度お試しください')}
 };
 
-$("stop").onclick=()=>{if(rec)try{listening=false;rec.stop()}catch(e){}if(TTS)speechSynthesis.cancel();mic.classList.remove('listening');status.textContent='停止しました';orb.textContent='◉'};
+$("stop").onclick=()=>{if(rec)try{listening=false;rec.stop()}catch(e){}if(TTS){if(speechTimer)clearTimeout(speechTimer);speechSynthesis.cancel()}mic.classList.remove('listening');status.textContent='停止しました';orb.textContent='◉'};
 $("speak").onclick=()=>{if(lastAnswer){status.textContent='音声を準備中…';speak(lastAnswer)}else status.textContent='まだ回答がありません。';};
 $("gear").onclick=()=>$("settings").classList.toggle('open');
 </script>
