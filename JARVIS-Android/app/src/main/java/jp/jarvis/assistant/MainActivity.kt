@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
-import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import java.util.Locale
@@ -22,7 +21,25 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         web.settings.javaScriptEnabled = true
         web.settings.domStorageEnabled = true
         web.settings.mediaPlaybackRequiresUserGesture = false
-        web.webViewClient = WebViewClient()
+        web.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView, url: String) {
+                super.onPageFinished(view, url)
+                view.evaluateJavascript("""
+                    (function(){
+                      if(!window.AndroidTTS || !window.speechSynthesis) return;
+                      const s=window.speechSynthesis;
+                      s.speak=function(u){
+                        try{if(u&&u.onstart)u.onstart();}catch(e){}
+                        try{window.AndroidTTS.speak((u&&u.text)||'');}catch(e){}
+                        const ms=Math.max(900,(((u&&u.text)||'').length)*170);
+                        setTimeout(function(){try{if(u&&u.onend)u.onend();}catch(e){}},ms);
+                      };
+                      s.cancel=function(){try{window.AndroidTTS.stop();}catch(e){}};
+                      s.resume=function(){};
+                    })();
+                """.trimIndent(), null)
+            }
+        }
         web.webChromeClient = WebChromeClient()
         web.addJavascriptInterface(AndroidTtsBridge(), "AndroidTTS")
         setContentView(web)
@@ -38,21 +55,15 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         @JavascriptInterface
         fun speak(text: String) {
             runOnUiThread {
-                if (!ready) {
-                    tts = TextToSpeech(this@MainActivity, this@MainActivity)
-                    return@runOnUiThread
-                }
+                if (!ready) return@runOnUiThread
                 tts.language = Locale.JAPAN
                 tts.setSpeechRate(0.95f)
                 tts.setPitch(1.0f)
                 tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "JARVIS")
             }
         }
-
         @JavascriptInterface
-        fun stop() {
-            runOnUiThread { if (ready) tts.stop() }
-        }
+        fun stop() { runOnUiThread { if (ready) tts.stop() } }
     }
 
     override fun onDestroy() {
