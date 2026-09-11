@@ -21,7 +21,7 @@
 <div class="actions"><button class="small" id="stop">停止</button><button class="small" id="speak">もう一度読み上げ</button></div>
 <section class="result"><div class="label">JARVIS</div><div class="text" id="text">マイクを押して話しかけてください。</div></section>
 <div class="hint">例）こんにちは / 今の時間を教えて / 今日の日付は？ / 日経平均を見せて</div>
-<div class="settings" id="settings">音声：日本語（ja-JP）<br>音声認識：ブラウザー対応時に使用<br>音声合成：端末の日本語音声を使用</div>
+<div class="settings" id="settings">音声：日本語（ja-JP）<br>音声認識：ブラウザー対応時に使用<br>音声合成：Web版はブラウザー、Android版は端末の日本語音声を使用</div>
 </main>
 <script>
 const $=id=>document.getElementById(id);
@@ -35,6 +35,17 @@ if(TTS){loadVoices();if('onvoiceschanged' in speechSynthesis)speechSynthesis.onv
 
 function speak(a){
   lastAnswer=a;
+  if(window.AndroidTTS){
+    try{
+      if(speechTimer)clearTimeout(speechTimer);
+      status.textContent='音声で回答中…';
+      window.AndroidTTS.speak(a);
+      return true;
+    }catch(e){
+      status.textContent='Android音声出力を開始できませんでした';
+      return false;
+    }
+  }
   if(!TTS){status.textContent='このブラウザーは音声読み上げに対応していません';return false}
   try{
     if(speechTimer)clearTimeout(speechTimer);
@@ -93,7 +104,7 @@ mic.onclick=()=>{
  try{status.textContent='マイクを準備中…';rec.start()}catch(e){setError('音声認識を開始できませんでした。少し待ってから再度お試しください')}
 };
 
-$("stop").onclick=()=>{if(rec)try{listening=false;rec.stop()}catch(e){}if(TTS){if(speechTimer)clearTimeout(speechTimer);speechSynthesis.cancel()}mic.classList.remove('listening');status.textContent='停止しました';orb.textContent='◉'};
+$("stop").onclick=()=>{if(rec)try{listening=false;rec.stop()}catch(e){}if(window.AndroidTTS){try{window.AndroidTTS.stop()}catch(e){}}else if(TTS){if(speechTimer)clearTimeout(speechTimer);speechSynthesis.cancel()}mic.classList.remove('listening');status.textContent='停止しました';orb.textContent='◉'};
 $("speak").onclick=()=>{if(lastAnswer){status.textContent='音声を準備中…';speak(lastAnswer)}else status.textContent='まだ回答がありません。';};
 $("gear").onclick=()=>$("settings").classList.toggle('open');
 </script>
