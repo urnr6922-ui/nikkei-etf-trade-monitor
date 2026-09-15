@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-09-15T03:00:32.555Z",
+  "generatedAt": "2026-09-15T03:16:50.980Z",
   "source": "public market data used by Nikkei ETF Trade Monitor",
   "assets": {
     "1360": {
       "code": "1360",
       "name": "日経平均ベア2倍",
-      "fetchedAt": "2026-09-15T03:00:03.225Z",
+      "fetchedAt": "2026-09-15T03:16:29.366Z",
       "price": 71.4000015258789,
       "changePct": 0,
       "technical": {
@@ -26,18 +26,18 @@
     "1570": {
       "code": "1570",
       "name": "日経レバ",
-      "fetchedAt": "2026-09-15T03:00:03.733Z",
-      "price": 64790,
-      "changePct": 0.046324891908589017,
+      "fetchedAt": "2026-09-15T03:16:29.531Z",
+      "price": 64820,
+      "changePct": 0.046303441889183894,
       "technical": {
-        "sma20": 64414,
-        "ema20": 64424.92511794778,
-        "rsi14": 68.75,
-        "macd": 224.88672781911737,
-        "macdSignal": 214.8066764981117,
+        "sma20": 64461.5,
+        "ema20": 64462.55300042666,
+        "rsi14": 67.28971962616822,
+        "macd": 229.00988410446735,
+        "macdSignal": 217.6126213077702,
         "bollinger": {
-          "upper": 64885.69481659225,
-          "lower": 63942.30518340775
+          "upper": 64894.22508593794,
+          "lower": 64028.77491406206
         }
       },
       "judgment": "上向き / 買い優勢",
@@ -47,7 +47,7 @@
     "NIKKEI225": {
       "code": "NIKKEI225",
       "name": "日経平均",
-      "fetchedAt": "2026-09-15T03:00:10.660Z",
+      "fetchedAt": "2026-09-15T03:16:32.205Z",
       "price": 64082.359375,
       "changePct": 0,
       "technical": {
