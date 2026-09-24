@@ -1,69 +1,69 @@
 {
-  "generatedAt": "2026-09-24T01:56:44.535Z",
+  "generatedAt": "2026-09-24T02:07:40.408Z",
   "source": "public market data used by Nikkei ETF Trade Monitor",
   "assets": {
     "1360": {
       "code": "1360",
       "name": "日経平均ベア2倍",
-      "fetchedAt": "2026-09-24T01:56:16.820Z",
-      "price": 67.0999984741211,
-      "changePct": 0.1492514539120693,
+      "fetchedAt": "2026-09-24T02:07:13.465Z",
+      "price": 67.4000015258789,
+      "changePct": 0,
       "technical": {
-        "sma20": 67.03000030517578,
-        "ema20": 67.2466100676092,
-        "rsi14": 55.55555555555556,
-        "macd": -0.36300493142015,
-        "macdSignal": -0.43929043928646244,
+        "sma20": 67.02000045776367,
+        "ema20": 67.28222988052099,
+        "rsi14": 60.000152589636876,
+        "macd": -0.2569784411732172,
+        "macdSignal": -0.379793099503227,
         "bollinger": {
-          "upper": 67.4354607308021,
-          "lower": 66.62453987954945
+          "upper": 67.3582294159225,
+          "lower": 66.68177149960485
         }
       },
       "judgment": "上向き / 買い優勢",
-      "buyPriorityPct": 77,
-      "sellPriorityPct": 23
+      "buyPriorityPct": 90,
+      "sellPriorityPct": 10
     },
     "1570": {
       "code": "1570",
       "name": "日経レバ",
-      "fetchedAt": "2026-09-24T01:56:17.297Z",
-      "price": 68830,
-      "changePct": -0.07259001161440404,
+      "fetchedAt": "2026-09-24T02:07:13.959Z",
+      "price": 68560,
+      "changePct": -0.014583637159104601,
       "technical": {
-        "sma20": 68882,
-        "ema20": 68668.89129544706,
-        "rsi14": 43.258426966292134,
-        "macd": 349.71620983946195,
-        "macdSignal": 425.64697317504744,
+        "sma20": 68893.5,
+        "ema20": 68633.6293382408,
+        "rsi14": 41.621621621621614,
+        "macd": 248.44992214933154,
+        "macdSignal": 365.983940683676,
         "bollinger": {
-          "upper": 69303.21728359601,
-          "lower": 68460.78271640399
+          "upper": 69230.02785917366,
+          "lower": 68556.97214082634
         }
       },
-      "judgment": "中立 / 様子見",
-      "buyPriorityPct": 41,
-      "sellPriorityPct": 59
+      "judgment": "下向き / 売り優勢",
+      "buyPriorityPct": 23,
+      "sellPriorityPct": 77
     },
     "NIKKEI225": {
       "code": "NIKKEI225",
       "name": "日経平均",
-      "fetchedAt": "2026-09-24T01:56:21.950Z",
-      "price": 66067.5,
-      "changePct": -0.04852999960051063,
+      "fetchedAt": "2026-09-24T02:07:18.878Z",
+      "price": 65932.8984375,
+      "changePct": -0.0285246580150611,
       "technical": {
-        "sma20": 66096.06015625,
-        "ema20": 65988.64584915615,
-        "rsi14": 42.431978501847496,
-        "macd": 174.3298507926811,
-        "macdSignal": 211.21564739401538,
+        "sma20": 66103.41953125,
+        "ema20": 65973.15142210534,
+        "rsi14": 41.0015765556895,
+        "macd": 125.1336197967612,
+        "macdSignal": 182.55900467429612,
         "bollinger": {
-          "upper": 66304.84938067697,
-          "lower": 65887.27093182302
+          "upper": 66264.12506212498,
+          "lower": 65942.71400037501
         }
       },
-      "judgment": "中立 / 様子見",
-      "buyPriorityPct": 41,
-      "sellPriorityPct": 59
+      "judgment": "下向き / 売り優勢",
+      "buyPriorityPct": 23,
+      "sellPriorityPct": 77
     }
   }
 }
