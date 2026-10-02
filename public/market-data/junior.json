@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-10-02T03:17:20.387Z",
+  "generatedAt": "2026-10-02T03:34:08.847Z",
   "source": "public market data used by Nikkei ETF Trade Monitor",
   "assets": {
     "1360": {
       "code": "1360",
       "name": "日経平均ベア2倍",
-      "fetchedAt": "2026-10-02T03:16:46.205Z",
+      "fetchedAt": "2026-10-02T03:33:33.962Z",
       "price": 61.599998474121094,
       "changePct": -0.1620782618829808,
       "technical": {
@@ -26,7 +26,7 @@
     "1570": {
       "code": "1570",
       "name": "日経レバ",
-      "fetchedAt": "2026-10-02T03:16:46.428Z",
+      "fetchedAt": "2026-10-02T03:33:34.228Z",
       "price": 74320,
       "changePct": 0.01345713901224066,
       "technical": {
@@ -47,7 +47,7 @@
     "NIKKEI225": {
       "code": "NIKKEI225",
       "name": "日経平均",
-      "fetchedAt": "2026-10-02T03:16:49.303Z",
+      "fetchedAt": "2026-10-02T03:33:37.464Z",
       "price": 68326.71875,
       "changePct": 0,
       "technical": {
